@@ -9,6 +9,7 @@ import v.help
 import v.pref
 import v.util
 import v.util.version
+import v.util.vflags
 import v.builder
 import v.builder.cbuilder
 
@@ -57,6 +58,13 @@ const external_tools = [
 ]
 const list_of_flags_that_allow_duplicates = ['cc', 'd', 'define', 'cf', 'cflags']
 
+fn get_raw_command_line() ?string {
+	$if windows {
+		s := C.GetCommandLine()
+		return if s == 0 { none } else { unsafe { string_from_wide(s) } }
+	} $else { return none }
+}
+
 fn main() {
 	mut timers_should_print := false
 	$if time_v ? {
@@ -75,24 +83,29 @@ fn main() {
 		timers.show('TOTAL')
 	})!
 	timers.start('v parsing CLI args')
+
 	println('v args=${os.args}')
-	// raw_command_line := $if windows { C.GetCommandLine() } $else { 'NONE' }
-	// eprintln('raw_command_line=${raw_command_line}')
-	args := os.args[1..]
+	raw_command_line := get_raw_command_line()
+	println('raw_command_line=${raw_command_line}')
+	raw_words := if s := raw_command_line { ?[]string(vflags.tokenize_to_args(s)) } else { ?[]string(none) }
+	println('raw_words=`${raw_words}`')
+
+	words := if w := raw_words { w } else { os.args }
+	args := words[1..]
 
 	if args.len == 0 || args[0] in ['-', 'repl'] {
 		if args.len == 0 {
 			// Running `./v` without args launches repl
 			if os.is_atty(0) == 0 {
-				mut args_and_flags := util.join_env_vflags_and_os_args()[1..].clone()
+				mut args_and_flags := vflags.join_env_vflags_and_args(args)[1..].clone()
 				args_and_flags << ['run', '-']
 				pref.parse_args_and_show_errors(external_tools, args_and_flags, true)
 			}
 		}
-		util.launch_tool(false, 'vrepl', os.args[1..])
+		util.launch_tool(false, 'vrepl', args)
 		return
 	}
-	mut args_and_flags := util.join_env_vflags_and_os_args()[1..]
+	mut args_and_flags := vflags.join_env_vflags_and_args(args)[1..]
 	prefs, command := pref.parse_args_and_show_errors(external_tools, args_and_flags,
 		true)
 	if prefs.use_cache && os.user_os() == 'windows' {

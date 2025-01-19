@@ -8,6 +8,11 @@ import strings
 
 // join_env_vflags_and_os_args returns all the arguments (the ones from the env variable VFLAGS too), passed on the command line.
 pub fn join_env_vflags_and_os_args() []string {
+	return join_env_vflags_and_args(os.args)
+}
+
+// join_env_vflags_and_args returns all the "command line" arguments from the environment (VOSARGS, VFLAGS) prefixed to the command line.
+pub fn join_env_vflags_and_args(args_ []string) []string {
 	vosargs := os.getenv('VOSARGS')
 	if vosargs != '' {
 		return tokenize_to_args(vosargs)
@@ -15,9 +20,9 @@ pub fn join_env_vflags_and_os_args() []string {
 	vflags := os.getenv('VFLAGS')
 	if vflags != '' {
 		mut args := []string{}
-		args << os.args[0]
+		args << args_[0]
 		args << tokenize_to_args(vflags)
-		args << os.args#[1..]
+		args << args_#[1..]
 		return args
 	}
 	return os.args
