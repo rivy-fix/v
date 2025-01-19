@@ -75,6 +75,9 @@ fn main() {
 		timers.show('TOTAL')
 	})!
 	timers.start('v parsing CLI args')
+	println('v args=${os.args}')
+	// raw_command_line := $if windows { C.GetCommandLine() } $else { 'NONE' }
+	// eprintln('raw_command_line=${raw_command_line}')
 	args := os.args[1..]
 
 	if args.len == 0 || args[0] in ['-', 'repl'] {

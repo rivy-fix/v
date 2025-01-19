@@ -135,16 +135,19 @@ fn (mut b Builder) run_compiled_executable_and_exit() {
 	run_args << b.pref.run_args
 
 	if b.pref.is_verbose {
-		println('running ${run_file} with arguments ${run_args.join(' ')}')
+		// println('running ${run_file} with arguments ${run_args.join(' ')}')
+		println('running `${run_file}` with arguments `${run_args.join(' ')}` (${run_args})')
 	}
 	mut ret := 0
 	if b.pref.use_os_system_to_run {
 		command_to_run := run_file + ' ' + run_args.join(' ')
 		ret = os.system(command_to_run)
 		// eprintln('> ret: ${ret:5} | command_to_run: ${command_to_run}')
+		eprintln('>[os_system_to_run] ret: ${ret:5} | command_to_run: `${command_to_run}`')
 	} else {
 		mut run_process := os.new_process(run_file)
 		run_process.set_args(run_args)
+		eprintln('> run_process: ${run_process}')
 		// Ignore sigint and sigquit while running the compiled file,
 		// so ^C doesn't prevent v from deleting the compiled file.
 		// See also https://git.musl-libc.org/cgit/musl/tree/src/process/system.c
